@@ -29,6 +29,7 @@ struct payload{
   uint16_t iaq;                                     // Indoor Air Quality
   float voc;                                       // Volatile Organic Compound (Gas metric)
   bool valid_iaq;                                 // False => IAQ value unstable : else IAQ value stable
+  uint16_t aqi;                                  // outdoor Air Quality Index
 }air_quality_metrics;
 
 
@@ -40,7 +41,7 @@ void print_log_info(log_info log_data);      // Print log data on serial monitor
 // Initialization
 void setup(void)
 {
-  Serial.begin(115200);
+  Serial.begin(9600);
   Wire.begin();
 
   while(!Serial){
@@ -50,13 +51,16 @@ void setup(void)
   
   sensor_config();
 
-  print_log_info(SYSTEM_METRICS);
-  
+  print_log_info(SYSTEM_METRICS);  
 }
 
 // While(1) function
 void loop(void)
 {
+  if(!air_quality_metrics.aqi){    
+    air_quality_metrics.aqi = Serial.parseInt();
+  }
+  
   if(iaqSensor.status == BSEC_OK){    
       if (iaqSensor.run()) { // If new data is available
         update_led(SENSOR_RUNNING);
@@ -141,6 +145,7 @@ void print_log_info(log_info log_data){
       output = "Temperature: " + String(iaqSensor.temperature);
       output += ", Humidity: " + String(iaqSensor.humidity);
       output += ", IAQ: " + String(iaqSensor.iaq);
+      output += ", AQI: " + String(air_quality_metrics.aqi);
       output += ", IAQAccuracy: " + String(iaqSensor.iaqAccuracy); 
       output += ", VOC: " + String(iaqSensor.breathVocEquivalent);
       Serial.println(output);
